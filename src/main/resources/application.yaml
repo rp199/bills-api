@@ -1,0 +1,22 @@
+"%dev":
+  quarkus:
+    dynamodb:
+      endpoint-override: http://localhost:4566
+      aws:
+        region: eu-central-1
+        credentials:
+          type: static
+          static-provider:
+            access-key-id: test-key
+            secret-access-key: test-secret
+
+dynamodb-table:
+  definitions:
+    table-name: bills
+    hash-key: pk
+    sort-key: sk
+    sort-key-place-holder: NA
+  keys:
+    key-separator: "#"
+    user-name-prefix: USER_NAME
+    bills-group-prefix: B_GROUP

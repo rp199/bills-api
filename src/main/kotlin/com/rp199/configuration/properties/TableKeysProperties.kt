@@ -1,0 +1,8 @@
+package com.rp199.configuration.properties
+
+import io.quarkus.arc.config.ConfigProperties
+
+@ConfigProperties(prefix = "dynamodb-table.keys")
+data class TableKeysProperties(var keySeparator: String = "",
+                               var userNamePrefix: String = "",
+                               var billsGroupPrefix: String = "")
