@@ -7,53 +7,41 @@ import com.rp199.model.UpdateUserRequest
 import com.rp199.model.UserAlreadyExists
 import com.rp199.model.UserCreated
 import com.rp199.model.UserResponse
-import com.rp199.repository.DynamoDBRecord
 import com.rp199.repository.DynamoDBRepository
-import com.rp199.repository.model.UserViewModel
+import com.rp199.repository.model.UserDynamoDbBean
 import com.rp199.repository.sealed.ItemCreated
 import com.rp199.repository.sealed.KeysAlreadyOnTheDatabase
-import com.rp199.repository.sealed.PutItemResult
 import javax.inject.Singleton
 
 @Singleton
-class UserService(private val userDynamoDBView: DynamoDBRepository<UserViewModel>) {
+class UserService(private val userDynamoDbRepository: DynamoDBRepository<String, String, UserDynamoDbBean>) {
 
     suspend fun createUser(createUserRequest: CreateUserRequest): PutUserResult {
-        return putUser(createUserRequest.userName, createUserRequest.displayName) {
-            this.putItemViewIfNotExists(it)
+        return when (userDynamoDbRepository.putItemIfNotExists(UserDynamoDbBean(createUserRequest.userName, createUserRequest.displayName))) {
+            is KeysAlreadyOnTheDatabase -> UserAlreadyExists
+            is ItemCreated -> UserCreated(createUserRequest.userName)
         }
     }
 
     suspend fun createOrUpdateUser(userName: String, putUserRequest: PutUserRequest): PutUserResult {
-        return putUser(userName, putUserRequest.displayName) {
-            this.putItemView(it)
-        }
+        userDynamoDbRepository.putItem(UserDynamoDbBean(userName, putUserRequest.displayName))
+        return UserCreated(userName)
     }
 
-    private suspend fun putUser(userName: String, displayName: String?, putAction: suspend DynamoDBRepository<UserViewModel>.(UserViewModel) -> PutItemResult): PutUserResult {
-        return when (val putItemResult = userDynamoDBView.putAction(UserViewModel(userName, displayName
-                ?: userName))) {
-            is ItemCreated -> UserCreated(putItemResult.pk)
-            is KeysAlreadyOnTheDatabase -> UserAlreadyExists
-        }
-    }
 
     suspend fun getUser(userName: String): UserResponse? {
-        return userDynamoDBView.getItemView(userName)?.let {
-            UserResponse(it.userName, it.displayName)
+        return userDynamoDbRepository.getItem(UserDynamoDbBean(userName))?.let {
+            UserResponse(it.userName!!, it.displayName!!, listOf())
         }
     }
 
     suspend fun deleteUser(userName: String) {
-        userDynamoDBView.deleteItemView(userName)
+        userDynamoDbRepository.deleteItem(UserDynamoDbBean(userName))
     }
 
-    suspend fun updateUser(userName: String, updateUserRequest: UpdateUserRequest) {
-        userDynamoDBView.updateItem(DynamoDBRecord(userName, attributes = mapOf()))
+    suspend fun updateUser(userName: String, updateUserRequest: UpdateUserRequest): UserResponse? {
+        return userDynamoDbRepository.updateItem(UserDynamoDbBean(userName, updateUserRequest.displayName))?.let {
+            UserResponse(it.userName!!, it.displayName!!, listOf())
+        }
     }
-
-    suspend fun updateUserDisplayName(displayName: String) {
-
-    }
-
 }

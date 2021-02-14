@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "1.4.10"
+    kotlin("plugin.noarg") version "1.4.10"
     kotlin("plugin.allopen") version "1.4.10"
     id("io.quarkus")
 }
@@ -48,6 +49,10 @@ allOpen {
     annotation("javax.enterprise.context.ApplicationScoped")
     annotation("javax.inject.Singleton")
     annotation("io.quarkus.test.junit.QuarkusTest")
+}
+
+noArg {
+    annotation("com.rp199.model.JavaEmptyConstructor")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {

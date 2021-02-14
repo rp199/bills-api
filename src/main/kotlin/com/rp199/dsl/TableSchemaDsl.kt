@@ -1,5 +1,6 @@
 package com.rp199.dsl
 
+import com.rp199.repository.model.DynamoDbBean
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient
 import software.amazon.awssdk.enhanced.dynamodb.mapper.StaticAttribute
@@ -10,7 +11,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.StaticTableSchema
 annotation class TableSchemaDslMarker
 
 @TableSchemaDslMarker
-class TableAsyncDsl<T>(private val clazz: Class<T>, private val enhancedAsyncClient: DynamoDbEnhancedAsyncClient) {
+class TableAsyncDsl<T : DynamoDbBean<String, String>>(private val clazz: Class<T>, private val enhancedAsyncClient: DynamoDbEnhancedAsyncClient) {
     var name = "dummy"
     var schema: StaticTableSchema<T>? = null
 
@@ -22,7 +23,7 @@ class TableAsyncDsl<T>(private val clazz: Class<T>, private val enhancedAsyncCli
 }
 
 @TableSchemaDslMarker
-class TableSchemaDsl<T>(private val clazz: Class<T>, private val builder: StaticTableSchema.Builder<T>) {
+class TableSchemaDsl<T : DynamoDbBean<String, String>>(private val clazz: Class<T>, private val builder: StaticTableSchema.Builder<T>) {
     var name = ""
     private val keys = mutableListOf<StaticAttribute<T, *>>()
     private val attributes = mutableListOf<StaticAttribute<T, *>>()
@@ -48,17 +49,19 @@ class TableSchemaDsl<T>(private val clazz: Class<T>, private val builder: Static
 }
 
 @TableSchemaDslMarker
-class PrefixedKeyDsl<T>(private val keyType: KeyType, private val builder: StaticAttribute.Builder<T, String>) {
+class PrefixedKeyDsl<T : DynamoDbBean<String, String>>(private val keyType: KeyType, private val builder: StaticAttribute.Builder<T, String>) {
     var name = ""
     var prefix = ""
     var prefixSeparator = ""
+    private var getter: ((T) -> String?)? = null
+    private var setter: ((T, String?) -> Unit)? = null
 
     fun getter(getter: (T) -> String?) {
-        builder.getter(getter)
+        this.getter = getter
     }
 
     fun setter(setter: (T, String?) -> Unit) {
-        builder.setter(setter)
+        this.setter = setter
     }
 
     fun build(): StaticAttribute<T, String> {
@@ -67,10 +70,18 @@ class PrefixedKeyDsl<T>(private val keyType: KeyType, private val builder: Stati
         }
 
         when (keyType) {
-            KeyType.PARTITION_KEY -> builder.partitionKey()
-            KeyType.SORT_KEY -> builder.sortKey()
+            KeyType.PARTITION_KEY -> {
+                builder.partitionKey()
+                if (getter == null) getter = { it.getPkValue() }
+                if (setter == null) setter = { b, v -> b.setPkValue(v) }
+            }
+            KeyType.SORT_KEY -> {
+                builder.sortKey()
+                if (getter == null) getter = { it.getSkValue() }
+                if (setter == null) setter = { b, v -> b.setSkValue(v) }
+            }
         }
-        return builder.name(name).build()
+        return builder.name(name).getter(getter).setter(setter).build()
     }
 }
 
@@ -91,15 +102,16 @@ class AttributeDsl<T, S>(private val builder: StaticAttribute.Builder<T, S>) {
     }
 }
 
-inline fun <reified T> asyncTable(enhancedAsyncClient: DynamoDbEnhancedAsyncClient, block: TableAsyncDsl<T>.() -> Unit): DynamoDbAsyncTable<T> {
-    return TableAsyncDsl(T::class.java, enhancedAsyncClient).apply(block).build()
+//Cannot be inline due an issue while build on native
+fun <T : DynamoDbBean<String, String>> asyncTable(clazz: Class<T>, enhancedAsyncClient: DynamoDbEnhancedAsyncClient, block: TableAsyncDsl<T>.() -> Unit): DynamoDbAsyncTable<T> {
+    return TableAsyncDsl(clazz, enhancedAsyncClient).apply(block).build()
 }
 
-fun <T> tableSchema(clazz: Class<T>, block: TableSchemaDsl<T>.() -> Unit): StaticTableSchema<T> {
+fun <T : DynamoDbBean<String, String>> tableSchema(clazz: Class<T>, block: TableSchemaDsl<T>.() -> Unit): StaticTableSchema<T> {
     return TableSchemaDsl(clazz, StaticTableSchema.builder(clazz)).apply(block).build()
 }
 
-fun <T> prefixedKey(keyType: KeyType, clazz: Class<T>, block: PrefixedKeyDsl<T>.() -> Unit): StaticAttribute<T, String> {
+fun <T : DynamoDbBean<String, String>> prefixedKey(keyType: KeyType, clazz: Class<T>, block: PrefixedKeyDsl<T>.() -> Unit): StaticAttribute<T, String> {
     return PrefixedKeyDsl(keyType, StaticAttribute.builder(clazz, String::class.java)).apply(block).build()
 }
 
@@ -113,7 +125,7 @@ class Attributes<T>(val clazz: Class<T>) : ArrayList<StaticAttribute<T, *>>() {
     }
 }
 
-class StringKeys<T>(private val clazz: Class<T>) : ArrayList<StaticAttribute<T, String>>() {
+class StringKeys<T : DynamoDbBean<String, String>>(private val clazz: Class<T>) : ArrayList<StaticAttribute<T, String>>() {
     fun key(keyType: KeyType, keyBuilder: PrefixedKeyDsl<T>.() -> Unit) {
         add(prefixedKey(keyType, clazz, keyBuilder))
     }

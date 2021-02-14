@@ -1,0 +1,71 @@
+[
+  {
+    "name": "kotlin.reflect.jvm.internal.ReflectionFactoryImpl",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "kotlin.KotlinVersion",
+    "allPublicMethods": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.rp199.model.PutUserRequest[]"
+  },
+  {
+    "name": "com.rp199.model.CreateUserRequest[]"
+  },
+  {
+    "name": "com.rp199.model.UpdateUserRequest[]"
+  },
+  {
+    "name": "com.rp199.model.UserResponse[]"
+  },
+  {
+    "name": "com.rp199.model.MonthlyBillsOverview[]"
+  },
+  {
+    "name": "kotlin.KotlinVersion[]"
+  },
+  {
+    "name": "java.util.List[]"
+  },
+  {
+    "name": "kotlin.KotlinVersion$Companion"
+  },
+  {
+    "name": "kotlin.KotlinVersion$Companion[]"
+  },
+  {
+    "name": "com.rp199.model.CreateUserRequest",
+    "fields": [
+      {
+        "name": "displayName",
+        "allowWrite": true
+      },
+      {
+        "name": "userName",
+        "allowWrite": true
+      }
+    ]
+  },
+  {
+    "name": "com.rp199.model.UpdateUserRequest",
+    "fields": [
+      {
+        "name": "displayName",
+        "allowWrite": true
+      }
+    ]
+  },
+  {
+    "name": "com.rp199.model.PutUserRequest",
+    "fields": [
+      {
+        "name": "displayName",
+        "allowWrite": true
+      }
+    ]
+  }
+]

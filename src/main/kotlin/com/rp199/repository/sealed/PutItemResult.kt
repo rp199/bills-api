@@ -1,7 +1,9 @@
 package com.rp199.repository.sealed
 
-sealed class PutItemResult
+import com.rp199.repository.model.DynamoDbBean
 
-data class KeysAlreadyOnTheDatabase(val pk: String, val sk: String?) : PutItemResult()
+sealed class PutItemResult<S, T>(val dynamoDbBean: DynamoDbBean<S, T>)
 
-data class ItemCreated(val pk: String, val sk: String?) : PutItemResult()
+class KeysAlreadyOnTheDatabase<S, T>(dynamoDbBean: DynamoDbBean<S, T>) : PutItemResult<S, T>(dynamoDbBean)
+
+class ItemCreated<S, T>(dynamoDbBean: DynamoDbBean<S, T>) : PutItemResult<S, T>(dynamoDbBean)

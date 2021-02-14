@@ -9,6 +9,9 @@
           static-provider:
             access-key-id: test-key
             secret-access-key: test-secret
+quarkus:
+  native:
+    additional-build-args: -H:ResourceConfigurationFiles=resource-config.json,-H:ReflectionConfigurationFiles=reflect-config.json
 
 dynamodb-table:
   definitions:

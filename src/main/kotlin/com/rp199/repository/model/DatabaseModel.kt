@@ -1,35 +1,23 @@
 package com.rp199.repository.model
 
-import com.rp199.repository.DynamoDBRecord
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue as AWSAttributeValue
+import io.quarkus.runtime.annotations.RegisterForReflection
 
-
-interface DynamoDBViewModel{
-    fun toDynamoDBRecord(): DynamoDBRecord
+interface DynamoDbBean<K, S> {
+    fun getPkValue(): K?
+    fun setPkValue(value: K?)
+    fun getSkValue(): S?
+    fun setSkValue(value: S?)
 }
 
-//TODO naming pending
-data class UserViewModel(val userName: String, val displayName: String) : DynamoDBViewModel {
-    companion object {
-        const val DISPLAY_NAME_ATTRIBUTE = "displayName"
-        fun fromDynamoDDRecord(dynamoDBRecord: DynamoDBRecord): UserViewModel {
-            return UserViewModel(dynamoDBRecord.pk, dynamoDBRecord.attributes[DISPLAY_NAME_ATTRIBUTE] ?.s()?: dynamoDBRecord.pk)
-        }
+@RegisterForReflection
+data class UserDynamoDbBean(var userName: String? = null, var displayName: String? = null) : DynamoDbBean<String, String> {
+    override fun getPkValue(): String? = userName
+    override fun getSkValue(): String? = null
+    override fun setPkValue(value: String?) {
+        userName = value
     }
 
-    override fun toDynamoDBRecord(): DynamoDBRecord {
-        return DynamoDBRecord(userName, attributes = mapOf(
-                DISPLAY_NAME_ATTRIBUTE to AttributeValue.string(displayName)
-        ))
-    }
-
-
-}
-
-class AttributeValue {
-    companion object{
-        fun string(stringValue: String): AWSAttributeValue {
-            return AWSAttributeValue.builder().s(stringValue).build()
-        }
+    override fun setSkValue(value: String?) {
+        //Sk is a place holder value
     }
 }
