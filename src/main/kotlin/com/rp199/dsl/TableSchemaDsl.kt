@@ -73,7 +73,7 @@ class PrefixedKeyDsl<T : DynamoDbBean<String, String>>(private val keyType: KeyT
             KeyType.PARTITION_KEY -> {
                 builder.partitionKey()
                 if (getter == null) getter = { it.getPkValue() }
-                if (setter == null) setter = { b, v -> b.setPkValue(v) }
+                if (setter == null) setter = { b, v -> b.setPkValue(v!!) }
             }
             KeyType.SORT_KEY -> {
                 builder.sortKey()

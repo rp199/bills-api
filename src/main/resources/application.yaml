@@ -19,7 +19,8 @@ dynamodb-table:
     hash-key: pk
     sort-key: sk
     sort-key-place-holder: NA
-  keys:
     key-separator: "#"
+  keys:
     user-name-prefix: USER_NAME
     bills-group-prefix: B_GROUP
+    year-month-prefix: Y_M

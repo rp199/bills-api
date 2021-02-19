@@ -13,3 +13,6 @@ data class PutUserRequest(@get:Size(min = 3, max = 10) val displayName: String)
 
 @JavaEmptyConstructor
 data class UpdateUserRequest(@get:Size(min = 3, max = 10) val displayName: String?)
+
+@JavaEmptyConstructor
+data class CreateMonthlyBillsGroupRequest(val description: String, val users: List<String>)

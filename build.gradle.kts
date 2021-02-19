@@ -14,6 +14,7 @@ val quarkusPlatformGroupId: String by project
 val quarkusPlatformArtifactId: String by project
 val quarkusPlatformVersion: String by project
 val kotlinxVersion: String by project
+val mockkVersion: String by project
 
 dependencies {
     implementation(enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}"))
@@ -28,12 +29,14 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.rest-assured:rest-assured")
+    testImplementation("io.mockk:mockk:$mockkVersion")
     implementation("io.quarkus:quarkus-amazon-dynamodb")
     implementation("io.quarkus:quarkus-amazon-lambda-http")
     implementation("software.amazon.awssdk:dynamodb-enhanced")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinxVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:$kotlinxVersion")
 }
 
 group = "com.rp199"
@@ -49,6 +52,7 @@ allOpen {
     annotation("javax.enterprise.context.ApplicationScoped")
     annotation("javax.inject.Singleton")
     annotation("io.quarkus.test.junit.QuarkusTest")
+    annotation("com.rp199.model.JavaEmptyConstructor")
 }
 
 noArg {

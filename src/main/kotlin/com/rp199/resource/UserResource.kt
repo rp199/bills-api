@@ -5,11 +5,8 @@ import com.rp199.model.PutUserRequest
 import com.rp199.model.UpdateUserRequest
 import com.rp199.model.UserAlreadyExists
 import com.rp199.model.UserCreated
-import com.rp199.repository.model.UserDynamoDbBean
 import com.rp199.service.UserService
 import kotlinx.coroutines.runBlocking
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbAsyncTable
-import java.net.URI
 import javax.validation.Valid
 import javax.validation.constraints.Pattern
 import javax.ws.rs.Consumes
@@ -26,15 +23,13 @@ import javax.ws.rs.core.Response
 
 
 @Path("/users")
-class UserResource(val userService: UserService, val table: DynamoDbAsyncTable<UserDynamoDbBean>) {
+class UserResource(val userService: UserService) {
 
     @GET
     @Path("/{userName}")
     @Produces(MediaType.APPLICATION_JSON)
     fun getUser(@PathParam("userName") userName: String): Response = runBlocking {
-        userService.getUser(userName)?.let {
-            Response.ok(it).build()
-        } ?: Response.status(Response.Status.NOT_FOUND).build()
+        userService.getUser(userName).okOrNotFound()
     }
 
     @PUT
@@ -42,8 +37,8 @@ class UserResource(val userService: UserService, val table: DynamoDbAsyncTable<U
     @Consumes(MediaType.APPLICATION_JSON)
     fun putUser(@PathParam("userName") @Pattern(regexp = "^[a-zA-Z0-9]*\$") userName: String, @Valid putUserRequest: PutUserRequest): Response = runBlocking {
         when (val result = userService.createOrUpdateUser(userName, putUserRequest)) {
-            is UserCreated -> Response.created(URI.create("/user/${result.userName}")).build()
-            UserAlreadyExists -> Response.status(Response.Status.NO_CONTENT).build()
+            is UserCreated -> result.userName.created("/users")
+            UserAlreadyExists -> noContent()
         }
     }
 
@@ -59,18 +54,15 @@ class UserResource(val userService: UserService, val table: DynamoDbAsyncTable<U
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     fun patchUser(@PathParam("userName") userName: String, @Valid updateUserRequest: UpdateUserRequest): Response = runBlocking {
-        userService.updateUser(userName, updateUserRequest)?.let {
-            Response.ok(it).build()
-        } ?: Response.status(Response.Status.NOT_FOUND).build()
-
+        userService.updateUser(userName, updateUserRequest).okOrNotFound()
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     fun createUser(@Valid createUserRequest: CreateUserRequest): Response = runBlocking {
         when (val result = userService.createUser(createUserRequest)) {
-            is UserCreated -> Response.created(URI.create("/user/${result.userName}")).build()
-            UserAlreadyExists -> Response.status(Response.Status.CONFLICT).build()
+            is UserCreated -> result.userName.created("/users")
+            UserAlreadyExists -> conflict()
         }
     }
 }

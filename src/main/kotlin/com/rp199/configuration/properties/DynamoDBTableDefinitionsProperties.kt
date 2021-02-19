@@ -6,4 +6,5 @@ import io.quarkus.arc.config.ConfigProperties
 data class DynamoDBTableDefinitionsProperties(var tableName: String = "",
                                               var hashKey: String = "",
                                               var sortKey: String = "",
-                                              var sortKeyPlaceHolder: String? = "")
+                                              var sortKeyPlaceHolder: String? = "",
+                                              var keySeparator: String = "")
